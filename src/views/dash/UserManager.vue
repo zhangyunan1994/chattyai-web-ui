@@ -86,7 +86,7 @@
         <el-input v-model="createUserInfo.username" placeholder="登录用户名最好是英文"></el-input>
       </el-form-item>
       <el-form-item label="登录密码">
-        <el-input v-model="createUserInfo.password" placeholder="登录密码"></el-input>
+        <el-input v-model="createUserInfo.passwordHash" placeholder="登录密码"></el-input>
       </el-form-item>
       <el-form-item label="邮箱">
         <el-input v-model="createUserInfo.email" placeholder="邮箱"></el-input>
@@ -130,7 +130,7 @@ const page = reactive({
 
 const createUserInfo = reactive({
   username: '',
-  password: '',
+  passwordHash: '',
   email: '',
   avatar: '',
   description: '',

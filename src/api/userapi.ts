@@ -13,7 +13,7 @@ export function userPageList<T>(currentPage: number, pageSize: number) {
 export function userCreate<T = any>(
     params: {
       username: string,
-      password: string,
+      passwordHash: string,
       email: string,
       avatar: string,
       description: string,
