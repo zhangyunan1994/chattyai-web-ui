@@ -24,7 +24,7 @@
                 <Search/>
               </el-icon>
             </el-button>
-            <el-button @click="createUserDialog = true" type="success">
+            <el-button @click="openAddDialog" type="success">
               创建用户
             </el-button>
           </el-form-item>
@@ -45,13 +45,23 @@
             </template>
           </el-table-column>
           <el-table-column prop="uid" label="uid" width="200"/>
+          <el-table-column prop="nickname" label="昵称" width="160"/>
           <el-table-column prop="username" label="用户名" width="160"/>
+          <el-table-column prop="status" label="状态" width="160">
+            <template #default="scope">
+              <el-tag
+                  :type="scope.row.status === 1 ? 'success' : 'error'"
+                  disable-transitions>
+                {{ scope.row.status == 1 ? '正常':'禁止登录' }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="email" label="邮箱" width="200"/>
           <el-table-column prop="createTime" label="注册时间" width="200"/>
           <el-table-column prop="description" label="简介"/>
           <el-table-column fixed="right" label="操作" width="120">
-            <template #default>
-              <el-button type="primary">编辑</el-button>
+            <template #default="scope">
+              <el-button type="primary" @click="openEditDialog(scope.row)">编辑</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -71,37 +81,46 @@
     </div>
   </div>
 
-  <el-dialog v-model="createUserDialog" :show-close="false" width="500px">
+  <el-dialog v-model="showUserDialog" :show-close="false" width="500px">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
-        <span :id="titleId" :class="titleClass">创 建 用 户</span>
+        <span :id="titleId" :class="titleClass">{{ createUserOp ? "创 建 用 户" : '修 改 信 息'}}</span>
         <el-button type="danger" @click="close">
           <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
           Close
         </el-button>
       </div>
     </template>
-    <el-form label-position="left" label-width="150px" :model="createUserInfo">
-      <el-form-item label="名称">
-        <el-input v-model="createUserInfo.username" placeholder="登录用户名最好是英文"></el-input>
+    <el-form label-position="right" label-width="150px" :model="userInfo" :rules="rules" ref="ruleFormRef">
+      <el-form-item label="昵称" prop="nickname">
+        <el-input v-model="userInfo.nickname" placeholder="昵称"></el-input>
       </el-form-item>
-      <el-form-item label="登录密码">
-        <el-input v-model="createUserInfo.passwordHash" placeholder="登录密码"></el-input>
+      <el-form-item label="登录用户名" prop="username">
+        <el-input v-model="userInfo.username" placeholder="登录用户名最好是英文"></el-input>
       </el-form-item>
-      <el-form-item label="邮箱">
-        <el-input v-model="createUserInfo.email" placeholder="邮箱"></el-input>
+      <el-form-item label="登录密码" prop="passwordHash">
+        <el-input v-model="userInfo.passwordHash" placeholder="登录密码"></el-input>
       </el-form-item>
-      <el-form-item label="头像">
-        <el-input v-model="createUserInfo.avatar" placeholder="头像"></el-input>
+      <el-form-item label="邮箱" prop="email">
+        <el-input v-model="userInfo.email" placeholder="邮箱"></el-input>
       </el-form-item>
-      <el-form-item label="个人简介">
-        <el-input v-model="createUserInfo.description" placeholder="个人简介"></el-input>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="userInfo.status" >
+          <el-option label="正常" :value="1"/>
+          <el-option label="禁止登录" :value="2"/>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="头像" prop="avatar">
+        <el-input v-model="userInfo.avatar" placeholder="头像"></el-input>
+      </el-form-item>
+      <el-form-item label="个人简介" prop="description">
+        <el-input v-model="userInfo.description" placeholder="个人简介"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
         <span class="dialog-footer">
-          <el-button @click="createUserDialog = false">取 消</el-button>
-          <el-button type="primary" @click="addUser">确 定 添 加</el-button>
+          <el-button @click="showUserDialog=false">取 消</el-button>
+          <el-button type="primary" @click="addOrModifyUser(ruleFormRef)">确 定 {{ createUserOp ? '添 加' : '修 改'}}</el-button>
         </span>
     </template>
   </el-dialog>
@@ -111,15 +130,17 @@
 
 <script lang="ts" setup>
 import {onMounted, reactive, ref} from 'vue'
-import { ElButton, ElDialog } from 'element-plus'
+import {ElButton, ElDialog, ElMessage} from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCloseFilled } from '@element-plus/icons-vue'
-import { userPageList, userCreate } from '@/api'
+import { userPageList, userCreate, userModify } from '@/api'
 
-
-
+const ruleFormRef = ref<FormInstance>()
 const tableData = ref([])
 const search_text = ref('')
-const createUserDialog = ref(false)
+
+const showUserDialog = ref(false)
+const createUserOp = ref(false)
 
 const timeRange = ref([])
 const page = reactive({
@@ -128,13 +149,75 @@ const page = reactive({
   total: 0
 })
 
-const createUserInfo = reactive({
+const rules = reactive<FormRules>({
+  nickname: [
+    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+  ],
+  username: [
+    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+  ],
+  passwordHash: [
+    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+  ],
+  avatar: [
+    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+  ],
+})
+
+interface UserInfo {
+  id: number | null
+  nickname: string
+  username: string
+  passwordHash: string
+  email: string
+  avatar: string
+  status: number
+  description: string,
+}
+
+const userInfo = reactive<UserInfo>({
+  id: null,
+  nickname: '',
   username: '',
   passwordHash: '',
   email: '',
   avatar: '',
+  status: 1,
   description: '',
 })
+
+const openAddDialog = () => {
+  showUserDialog.value = true
+  createUserOp.value = true
+  resetUserInfo()
+}
+
+const openEditDialog = (row: UserInfo) => {
+  showUserDialog.value = true
+  createUserOp.value = false
+  userInfo.id = row.id
+  userInfo.nickname = row.nickname
+  userInfo.status = row.status
+  userInfo.username = row.username
+  userInfo.passwordHash = row.passwordHash
+  userInfo.email = row.email
+  userInfo.avatar = row.avatar
+  userInfo.description = row.description
+}
+
+const resetUserInfo = () => {
+  userInfo.id = null
+  userInfo.nickname = ''
+  userInfo.status = 1
+  userInfo.username = ''
+  userInfo.passwordHash = ''
+  userInfo.email = ''
+  userInfo.avatar = ''
+  userInfo.description = ''
+}
 
 const shortcuts = [
   {
@@ -188,19 +271,38 @@ onMounted(() => {
   queryAllEvent()
 })
 
-function addUser() {
-  userCreate(createUserInfo).then(response => {
-    console.info(response)
+const addOrModifyUser = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  await formEl.validate((valid, fields) => {
+    if (valid) {
+      let opfun = null
+      if (createUserOp.value) {
+        opfun = userCreate(userInfo)
+      } else {
+        opfun = userModify(userInfo)
+      }
+      opfun.then(response => {
+        if (response.status === 'Success') {
+          ElMessage.success(createUserOp.value ? '添加成功' : '修改成功')
+          showUserDialog.value = false
+          queryAllEvent()
+          resetUserInfo()
+        } else {
+          ElMessage.error(response.message as string)
+        }
+      }).catch(error => {
+        console.info(error)
+        ElMessage.error('出错了，谁知道呢')
+      })
+    } else {
+      console.log('error submit!', fields)
+    }
   })
 }
 
 function resetPageThenQuery() {
   page.currentPage = 1
   queryAllEvent()
-}
-
-interface UserInfo {
-  totalUsage?: number
 }
 
 async function queryAllEvent() {
