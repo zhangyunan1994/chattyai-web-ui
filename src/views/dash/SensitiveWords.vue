@@ -25,7 +25,7 @@
               </el-icon>
             </el-button>
             <el-button @click="openAddDialog" type="success">
-              创建用户
+              添 加
             </el-button>
           </el-form-item>
         </el-form>
@@ -39,29 +39,25 @@
             style="width: 100%"
             height="calc(100vh - 260px)">
           <el-table-column prop="id" label="id" width="80"/>
-          <el-table-column prop="avatar" label="头像" width="100">
-            <template #default="scope">
-              <el-image style="width: 60px; height: 60px" :src="scope.row.avatar"/>
-            </template>
-          </el-table-column>
-          <el-table-column prop="uid" label="uid" width="200"/>
-          <el-table-column prop="nickname" label="昵称" width="160"/>
-          <el-table-column prop="username" label="用户名" width="160"/>
-          <el-table-column prop="status" label="状态" width="160">
-            <template #default="scope">
-              <el-tag
-                  :type="scope.row.status === 1 ? 'success' : 'error'"
-                  disable-transitions>
-                {{ scope.row.status == 1 ? '正常':'禁止登录' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="email" label="邮箱" width="200"/>
-          <el-table-column prop="createTime" label="注册时间" width="200"/>
-          <el-table-column prop="description" label="简介"/>
-          <el-table-column fixed="right" label="操作" width="120">
+          <el-table-column prop="category" label="分组" width="100" />
+          <el-table-column prop="word" label="敏感内容"/>
+          <el-table-column prop="createdAt" label="创建时间" width="200"/>
+          <el-table-column prop="updatedAt" label="更新时间" width="200"/>
+          <el-table-column fixed="right" label="操作" width="200">
             <template #default="scope">
               <el-button type="primary" @click="openEditDialog(scope.row)">编辑</el-button>
+              <el-popconfirm
+                  width="300"
+                  confirm-button-text="OK"
+                  cancel-button-text="No, Thanks"
+                  :icon="InfoFilled"
+                  icon-color="#626AEF"
+                  @confirm="confirmDelete(scope.row.id)"
+                  title="Are you sure to delete this?">
+                <template #reference>
+                  <el-button type="danger">删除</el-button>
+                </template>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -84,37 +80,19 @@
   <el-dialog v-model="showUserDialog" :show-close="false" width="500px">
     <template #header="{ close, titleId, titleClass }">
       <div class="my-header">
-        <span :id="titleId" :class="titleClass">{{ createUserOp ? "创 建 用 户" : '修 改 信 息'}}</span>
+        <span :id="titleId" :class="titleClass">{{ createUserOp ? "添 加" : '修 改'}}</span>
         <el-button type="danger" @click="close">
           <el-icon class="el-icon--left"><CircleCloseFilled /></el-icon>
           Close
         </el-button>
       </div>
     </template>
-    <el-form label-position="right" label-width="150px" :model="userInfo" :rules="rules" ref="ruleFormRef">
-      <el-form-item label="昵称" prop="nickname">
-        <el-input v-model="userInfo.nickname" placeholder="昵称"></el-input>
+    <el-form label-position="right" label-width="150px" :model="sensitiveInfo" :rules="rules" ref="ruleFormRef">
+      <el-form-item label="分组" prop="category">
+        <el-input v-model="sensitiveInfo.category" placeholder="分组名称"></el-input>
       </el-form-item>
-      <el-form-item label="登录用户名" prop="username">
-        <el-input v-model="userInfo.username" placeholder="登录用户名最好是英文"></el-input>
-      </el-form-item>
-      <el-form-item label="登录密码" prop="passwordHash" v-show="createUserOp">
-        <el-input v-model="userInfo.passwordHash" placeholder="登录密码"></el-input>
-      </el-form-item>
-      <el-form-item label="邮箱" prop="email">
-        <el-input v-model="userInfo.email" placeholder="邮箱"></el-input>
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="userInfo.status" >
-          <el-option label="正常" :value="1"/>
-          <el-option label="禁止登录" :value="2"/>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="头像" prop="avatar">
-        <el-input v-model="userInfo.avatar" placeholder="头像"></el-input>
-      </el-form-item>
-      <el-form-item label="个人简介" prop="description">
-        <el-input v-model="userInfo.description" placeholder="个人简介"></el-input>
+      <el-form-item label="内容" prop="word">
+        <el-input v-model="sensitiveInfo.word" placeholder="敏感内容"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -132,8 +110,8 @@
 import {onMounted, reactive, ref} from 'vue'
 import {ElButton, ElDialog, ElMessage} from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCloseFilled } from '@element-plus/icons-vue'
-import { userPageList, userCreate, userModify } from '@/api'
+import { CircleCloseFilled, InfoFilled } from '@element-plus/icons-vue'
+import {querySensitiveWordsPage, sensitiveWordCreate, sensitiveWordModify, sensitiveWordDelete} from '@/api'
 
 const ruleFormRef = ref<FormInstance>()
 const tableData = ref([])
@@ -150,43 +128,26 @@ const page = reactive({
 })
 
 const rules = reactive<FormRules>({
-  nickname: [
+  category: [
     { required: true, message: 'Please input Activity name', trigger: 'blur' },
-    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+    { min: 2, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
   ],
-  username: [
+  word: [
     { required: true, message: 'Please input Activity name', trigger: 'blur' },
-    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
-  ],
-  passwordHash: [
-    { required: true, message: 'Please input Activity name', trigger: 'blur' },
-    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
-  ],
-  avatar: [
-    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+    { min: 2, message: 'Length should be 3 to 5', trigger: 'blur' },
   ],
 })
 
-interface UserInfo {
+interface SensitiveWordInfo {
   id: number | null
-  nickname: string
-  username: string
-  passwordHash: string
-  email: string
-  avatar: string
-  status: number
-  description: string,
+  category: string
+  word: string
 }
 
-const userInfo = reactive<UserInfo>({
+const sensitiveInfo = reactive<SensitiveWordInfo>({
   id: null,
-  nickname: '',
-  username: '',
-  passwordHash: '',
-  email: '',
-  avatar: '',
-  status: 1,
-  description: '',
+  category: '',
+  word: '',
 })
 
 const openAddDialog = () => {
@@ -195,28 +156,18 @@ const openAddDialog = () => {
   resetUserInfo()
 }
 
-const openEditDialog = (row: UserInfo) => {
+const openEditDialog = (row: SensitiveWordInfo) => {
   showUserDialog.value = true
   createUserOp.value = false
-  userInfo.id = row.id
-  userInfo.nickname = row.nickname
-  userInfo.status = row.status
-  userInfo.username = row.username
-  userInfo.passwordHash = row.passwordHash
-  userInfo.email = row.email
-  userInfo.avatar = row.avatar
-  userInfo.description = row.description
+  sensitiveInfo.id = row.id
+  sensitiveInfo.category = row.category
+  sensitiveInfo.word = row.word
 }
 
 const resetUserInfo = () => {
-  userInfo.id = null
-  userInfo.nickname = ''
-  userInfo.status = 1
-  userInfo.username = ''
-  userInfo.passwordHash = ''
-  userInfo.email = ''
-  userInfo.avatar = ''
-  userInfo.description = ''
+  sensitiveInfo.id = null
+  sensitiveInfo.category = ''
+  sensitiveInfo.word = ''
 }
 
 const shortcuts = [
@@ -271,15 +222,29 @@ onMounted(() => {
   queryAllEvent()
 })
 
+const confirmDelete = (id: number) => {
+  sensitiveWordDelete(id).then(response => {
+    if (response.status === 'Success') {
+      ElMessage.success('删除成功')
+      queryAllEvent()
+    } else {
+      ElMessage.error(response.message as string)
+    }
+  }).catch(error => {
+    console.info(error)
+    ElMessage.error(error.message)
+  })
+}
+
 const addOrModifyUser = async (formEl: FormInstance | undefined) => {
   if (!formEl) return
   await formEl.validate((valid, fields) => {
     if (valid) {
       let opfun = null
       if (createUserOp.value) {
-        opfun = userCreate(userInfo)
+        opfun = sensitiveWordCreate(sensitiveInfo)
       } else {
-        opfun = userModify(userInfo)
+        opfun = sensitiveWordModify(sensitiveInfo)
       }
       opfun.then(response => {
         if (response.status === 'Success') {
@@ -313,7 +278,7 @@ async function queryAllEvent() {
     endTime = timeRange.value[1]
   }
 
-  userPageList(page.currentPage, page.pageSize).then(response => {
+  querySensitiveWordsPage(page.currentPage, page.pageSize, search_text.value).then(response => {
     tableData.value = response.data.dataList
     page.total = response.data.totalCount
   })

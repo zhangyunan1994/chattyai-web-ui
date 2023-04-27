@@ -28,6 +28,23 @@
 						<el-icon><UserFilled /></el-icon>
 						<template #title>用户管理</template>
 					</el-menu-item>
+					<el-sub-menu index="SensitiveWords">
+						<template #title>
+							<el-icon><WarnTriangleFilled /></el-icon>
+							<span>敏感词</span>
+						</template>
+						<el-menu-item index="/app/SensitiveWords">设置</el-menu-item>
+						<el-menu-item index="/app/SensitiveWordsHitRecord">命中记录</el-menu-item>
+					</el-sub-menu>
+					<el-menu-item index="/app/ChatGPTMessageRecord">
+						<el-icon><ChatLineSquare /></el-icon>
+						<template #title>对话记录</template>
+					</el-menu-item>
+					<el-menu-item index="/app/OpenAIKeyManager">
+						<el-icon><Key /></el-icon>
+						<template #title>OpenAI Key 池</template>
+					</el-menu-item>
+
 				</el-menu>
 				<div class="footer" v-show="!isCollapse">&copy; 2023 - present</div>
 			</el-aside>
