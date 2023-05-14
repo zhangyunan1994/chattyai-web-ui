@@ -36,9 +36,7 @@
 	</div>
 </template>
 
-<script>
-
-
+<script lang="ts">
 
 function getMsg(hour) {
 	let msg

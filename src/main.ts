@@ -11,14 +11,17 @@ import {setupRouter} from './router'
 
 import '@/assets/css/style.css'
 
+async function bootstrap() {
+  const app = createApp(App)
+  for (const [key, componentIcon] of Object.entries(ElementPlusIconsVue)) {
+    app.component(key, componentIcon)
+  }
 
-const app = createApp(App)
+  app.use(ElementPlus)
 
-for (const [key, componentIcon] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, componentIcon)
+  setupStore(app)
+  await setupRouter(app)
+  app.mount('#app')
 }
-app.use(ElementPlus)
 
-setupStore(app)
-await setupRouter(app)
-app.mount('#app')
+bootstrap().then(r => console.info("启动成功"))

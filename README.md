@@ -1,3 +1,9 @@
+
+1. 安装 node.js
+2. 安装 pnpm `npm install -g pnpm`
+3. 项目目录打包 `pnpm builddev` => mvn package
+
+
 # dependencies
 
 ```shell
