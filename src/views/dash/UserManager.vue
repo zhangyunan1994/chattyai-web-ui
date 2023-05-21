@@ -44,9 +44,18 @@
               <el-image style="width: 60px; height: 60px" :src="scope.row.avatar"/>
             </template>
           </el-table-column>
-          <el-table-column prop="uid" label="uid" width="200"/>
-          <el-table-column prop="nickname" label="昵称" width="160"/>
-          <el-table-column prop="username" label="用户名" width="160"/>
+          <el-table-column prop="uid" label="uid" width="180"/>
+          <el-table-column prop="nickname" label="昵称" width="120"/>
+          <el-table-column prop="username" label="用户名" width="120"/>
+          <el-table-column prop="role" label="角色" width="100">
+            <template #default="scope">
+              <el-tag
+                  :type="scope.row.role === 'user' ? 'success' : 'danger'"
+                  disable-transitions>
+                {{ scope.row.role == 'user' ? '普通用户': '管理员' }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="status" label="状态" width="100">
             <template #default="scope">
               <el-tag
@@ -56,9 +65,9 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="email" label="邮箱" width="200"/>
-          <el-table-column prop="createTime" label="注册时间" width="200"/>
-          <el-table-column prop="expiredTime" label="过期时间" width="200"/>
+          <el-table-column prop="email" label="邮箱" width="160"/>
+          <el-table-column prop="createTime" label="注册时间" width="180"/>
+          <el-table-column prop="expiredTime" label="过期时间" width="180"/>
           <el-table-column prop="description" label="简介"/>
           <el-table-column fixed="right" label="操作" width="120">
             <template #default="scope">
@@ -93,6 +102,12 @@
       </div>
     </template>
     <el-form label-position="right" label-width="150px" :model="userInfo" :rules="rules" ref="ruleFormRef">
+      <el-form-item label="用户角色" prop="role">
+        <el-select v-model="userInfo.role" class="width100">
+          <el-option label="普通用户" value="user"/>
+          <el-option label="管理员" value="admin"/>
+        </el-select>
+      </el-form-item>
       <el-form-item label="昵称" prop="nickname">
         <el-input v-model="userInfo.nickname" placeholder="昵称"></el-input>
       </el-form-item>
@@ -115,7 +130,7 @@
         <el-input v-model="userInfo.email" placeholder="邮箱"></el-input>
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="userInfo.status" >
+        <el-select v-model="userInfo.status" class="width100">
           <el-option label="正常" :value="1"/>
           <el-option label="禁止登录" :value="2"/>
           <el-option label="账号过期" :value="3"/>
@@ -191,6 +206,7 @@ interface UserInfo {
   status: number
   description: string,
   expiredTime: string | null,
+  role: string | null,
 }
 
 const userInfo = reactive<UserInfo>({
@@ -203,6 +219,7 @@ const userInfo = reactive<UserInfo>({
   status: 1,
   description: '',
   expiredTime: '',
+  role: 'user',
 })
 
 const openAddDialog = () => {
@@ -223,6 +240,7 @@ const openEditDialog = (row: UserInfo) => {
   userInfo.avatar = row.avatar
   userInfo.description = row.description
   userInfo.expiredTime = row.expiredTime
+  userInfo.role = row.role
 }
 
 const resetUserInfo = () => {
@@ -235,6 +253,7 @@ const resetUserInfo = () => {
   userInfo.avatar = ''
   userInfo.description = ''
   userInfo.expiredTime = ''
+  userInfo.role = 'user'
 }
 
 const shortcuts = [

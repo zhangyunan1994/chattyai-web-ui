@@ -26,12 +26,13 @@
             :data="tableData"
             style="width: 100%"
             height="calc(100vh - 260px)">
-          <el-table-column prop="id" label="id" width="80"/>
-          <el-table-column prop="accountId" label="账户" width="150"/>
+          <el-table-column prop="id" label="id" width="60"/>
+          <el-table-column prop="accountId" label="账户" width="120"/>
           <el-table-column prop="openaiKey" label="API key"/>
+          <el-table-column prop="supportModel" label="支持模型" width="80"/>
           <el-table-column prop="totalUseMoney" label="总使用金额" width="120"/>
           <el-table-column prop="totalUseToken" label="总使用 Token" width="120"/>
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" label="状态" width="80">
             <template #default="scope">
               <el-tag
                   :type="scope.row.status === 1 ? 'success' : 'danger'"
@@ -40,9 +41,9 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="expiredTime" label="过期时间" width="200"/>
-          <el-table-column prop="createTime" label="添加时间" width="200"/>
-          <el-table-column fixed="right" label="操作" width="200">
+          <el-table-column prop="expiredTime" label="过期时间" width="180"/>
+          <el-table-column prop="createTime" label="添加时间" width="180"/>
+          <el-table-column fixed="right" label="操作" width="160">
             <template #default="scope">
               <el-button type="primary" @click="openEditDialog(scope.row)">编辑</el-button>
               <el-popconfirm
@@ -93,6 +94,12 @@
       <el-form-item label="OpenaiKey" prop="openaiKey">
         <el-input v-model="keyInfo.openaiKey" placeholder="sk-"></el-input>
       </el-form-item>
+      <el-form-item label="支持模型" prop="supportModel">
+        <el-select v-model="keyInfo.supportModel" placeholder="Select" class="width100">
+          <el-option label="GPT-3" value="GPT-3"/>
+          <el-option label="GPT-4" value="GPT-4"/>
+        </el-select>
+      </el-form-item>
       <el-form-item label="过期时间" prop="expiredTime">
         <el-date-picker
             v-model="keyInfo.expiredTime"
@@ -104,7 +111,7 @@
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="keyInfo.status" >
+        <el-select v-model="keyInfo.status" class="width100" >
           <el-option label="正常" :value="1"/>
           <el-option label="关闭" :value="2"/>
           <el-option label="过期关闭" :value="3"/>
@@ -153,6 +160,7 @@ interface OpenAIKeyInfo {
   status: number
   createTime: string
   expiredTime: string
+  supportModel: string | null
 }
 
 const rules = reactive<FormRules>({
@@ -182,6 +190,7 @@ const keyInfo = reactive<OpenAIKeyInfo>({
   status: 1,
   createTime: '',
   expiredTime: '',
+  supportModel: 'GPT-3',
 })
 
 const openAddDialog = () => {
@@ -201,6 +210,7 @@ const openEditDialog = (row: OpenAIKeyInfo) => {
   keyInfo.status = row.status
   keyInfo.createTime = row.createTime
   keyInfo.expiredTime = row.expiredTime
+  keyInfo.supportModel = row.supportModel
 }
 
 const resetUserInfo = () => {
@@ -208,6 +218,7 @@ const resetUserInfo = () => {
   keyInfo.accountId = ''
   keyInfo.openaiKey = ''
   keyInfo.expiredTime = ''
+  keyInfo.supportModel = 'GPT-3'
   keyInfo.status = 1
 }
 

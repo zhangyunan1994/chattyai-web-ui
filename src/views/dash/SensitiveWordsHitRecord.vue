@@ -39,7 +39,7 @@
 					<el-table-column prop="createTime" label="发送时间" width="180"/>
 					<el-table-column prop="uid" label="发送用户" width="200"/>
 					<el-table-column prop="systemMessage" label="系统消息"/>
-					<el-table-column prop="content" label="用户内容"/>
+					<el-table-column prop="userMessage" label="用户内容"/>
 				</el-table>
 			</div>
 			<div class="panel-footer">
