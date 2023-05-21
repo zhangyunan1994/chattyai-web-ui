@@ -278,7 +278,7 @@ async function queryAllEvent() {
     endTime = timeRange.value[1]
   }
 
-  querySensitiveWordsPage(page.currentPage, page.pageSize, search_text.value).then(response => {
+  querySensitiveWordsPage(page.currentPage, page.pageSize, startTime, endTime, search_text.value).then(response => {
     tableData.value = response.data.dataList
     page.total = response.data.totalCount
   })

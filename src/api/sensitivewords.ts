@@ -13,13 +13,15 @@ export function querySensitiveWordsHitRecord<T>(currentPage: number, pageSize: n
   })
 }
 
-export function querySensitiveWordsPage<T>(currentPage: number, pageSize: number, searchText: string | null) {
+export function querySensitiveWordsPage<T>(currentPage: number, pageSize: number, startTime: string | null, endTime: string | null, searchText: string | null) {
   return get<T>({
     url: 'dashboard/sensitiveWords/pageList',
     data: {
       currentPage: currentPage,
       pageSize: pageSize,
       searchText: searchText,
+      startTime: startTime,
+      endTime: endTime,
     }
   })
 }

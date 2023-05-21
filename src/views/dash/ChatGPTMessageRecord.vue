@@ -16,6 +16,9 @@
 								value-format="YYYY-MM-DD HH:mm:ss"
 						/>
 					</el-form-item>
+          <el-form-item>
+            <el-input placeholder="用户" v-model="username" style="width: 300px"/>
+          </el-form-item>
 					<el-form-item>
 						<el-input placeholder="搜你想搜" v-model="search_text" style="width: 300px"/>
 					</el-form-item>
@@ -37,9 +40,21 @@
 						style="width: 100%"
 						height="calc(100vh - 260px)">
 					<el-table-column prop="createTime" label="发送时间" width="180"/>
-					<el-table-column prop="uid" label="发送用户" width="200"/>
-					<el-table-column prop="systemMessage" label="系统消息"/>
-					<el-table-column prop="content" label="用户内容"/>
+					<el-table-column prop="username" label="发送用户" width="110"/>
+					<el-table-column prop="systemMessage" label="预设内容"/>
+					<el-table-column prop="role" label="" width="80"/>
+          <el-table-column prop="role" label="消息类型" width="100">
+            <template #default="scope">
+              <el-tag
+                  :type="scope.row.role === 'user' ? 'success' : 'danger'"
+                  effect="dark"
+                  disable-transitions>
+                {{ scope.row.role == 'user' ? '用户提问': 'AI回答'}}
+              </el-tag>
+            </template>
+          </el-table-column>
+					<el-table-column prop="roleMessage" label="消息内容"/>
+					<el-table-column prop="promptTokens" label="消耗 Token" width="100"/>
 				</el-table>
 			</div>
 			<div class="panel-footer">
@@ -64,6 +79,7 @@ import {queryChatHistoryRecord} from '@/api'
 
 const tableData = ref([])
 const search_text = ref('')
+const username = ref('')
 
 const timeRange = ref([])
 const page = reactive({
@@ -138,7 +154,7 @@ function queryAllEvent() {
 		endTime = timeRange.value[1]
 	}
 
-	queryChatHistoryRecord(page.currentPage, page.pageSize, startTime, endTime, search_text.value).then(response => {
+	queryChatHistoryRecord(page.currentPage, page.pageSize, startTime, endTime, search_text.value, username.value).then(response => {
 		tableData.value = response.data.dataList
 		page.total = response.data.totalCount
 	})

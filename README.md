@@ -3,6 +3,39 @@
 2. 安装 pnpm `npm install -g pnpm`
 3. 项目目录打包 `pnpm builddev` => mvn package
 
+## 开发
+
+本项目依赖 node.js 和 pnpm
+
+```bash
+# 克隆项目
+git clone https://gitee.com/y_project/RuoYi-Vue
+
+# 进入项目目录
+cd ruoyi-ui
+
+# 安装依赖
+pnpm install
+
+# 建议不要直接使用 cnpm 安装依赖，会有各种诡异的 bug。可以通过如下操作解决 npm 下载速度慢的问题
+npm install --registry=https://registry.npmmirror.com
+
+# 启动服务
+pnpm run dev
+```
+
+浏览器访问 http://localhost:80
+
+## 发布
+
+```bash
+# 构建测试环境
+pnpm run build:stage
+
+# 构建生产环境
+pnpm run build:prod
+```
+
 
 # dependencies
 

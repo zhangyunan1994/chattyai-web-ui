@@ -47,17 +47,18 @@
           <el-table-column prop="uid" label="uid" width="200"/>
           <el-table-column prop="nickname" label="昵称" width="160"/>
           <el-table-column prop="username" label="用户名" width="160"/>
-          <el-table-column prop="status" label="状态" width="160">
+          <el-table-column prop="status" label="状态" width="100">
             <template #default="scope">
               <el-tag
-                  :type="scope.row.status === 1 ? 'success' : 'error'"
+                  :type="scope.row.status === 1 ? 'success' : 'danger'"
                   disable-transitions>
-                {{ scope.row.status == 1 ? '正常':'禁止登录' }}
+                {{ scope.row.status == 1 ? '正常': scope.row.status == 2 ? '禁止登录' : '账号过期' }}
               </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="email" label="邮箱" width="200"/>
           <el-table-column prop="createTime" label="注册时间" width="200"/>
+          <el-table-column prop="expiredTime" label="过期时间" width="200"/>
           <el-table-column prop="description" label="简介"/>
           <el-table-column fixed="right" label="操作" width="120">
             <template #default="scope">
@@ -98,6 +99,15 @@
       <el-form-item label="登录用户名" prop="username">
         <el-input v-model="userInfo.username" placeholder="登录用户名最好是英文"></el-input>
       </el-form-item>
+      <el-form-item label="过期时间" prop="expiredTime">
+        <el-date-picker
+            v-model="userInfo.expiredTime"
+            type="datetime"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            placeholder="Select date and time"
+        />
+      </el-form-item>
       <el-form-item label="登录密码" prop="passwordHash" v-show="createUserOp">
         <el-input v-model="userInfo.passwordHash" placeholder="登录密码"></el-input>
       </el-form-item>
@@ -108,6 +118,7 @@
         <el-select v-model="userInfo.status" >
           <el-option label="正常" :value="1"/>
           <el-option label="禁止登录" :value="2"/>
+          <el-option label="账号过期" :value="3"/>
         </el-select>
       </el-form-item>
       <el-form-item label="头像" prop="avatar">
@@ -156,14 +167,17 @@ const rules = reactive<FormRules>({
   ],
   username: [
     { required: true, message: 'Please input Activity name', trigger: 'blur' },
-    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+    { min: 3, max: 20, message: '请设置 8 - 20 位的登录用户名', trigger: 'blur' },
   ],
   passwordHash: [
     { required: true, message: 'Please input Activity name', trigger: 'blur' },
-    { min: 3, max: 20, message: 'Length should be 3 to 5', trigger: 'blur' },
+    { min: 8, max: 20, message: '请设置 8 - 20 位的密码', trigger: 'blur' },
   ],
   avatar: [
-    { required: true, message: 'Please input Activity name', trigger: 'blur' },
+    { required: true, message: '选择一个合适的头像', trigger: 'blur' },
+  ],
+  expiredTime: [
+    { required: true, message: '设置合理的过期时间', trigger: 'blur' },
   ],
 })
 
@@ -176,6 +190,7 @@ interface UserInfo {
   avatar: string
   status: number
   description: string,
+  expiredTime: string | null,
 }
 
 const userInfo = reactive<UserInfo>({
@@ -187,6 +202,7 @@ const userInfo = reactive<UserInfo>({
   avatar: '',
   status: 1,
   description: '',
+  expiredTime: '',
 })
 
 const openAddDialog = () => {
@@ -206,6 +222,7 @@ const openEditDialog = (row: UserInfo) => {
   userInfo.email = row.email
   userInfo.avatar = row.avatar
   userInfo.description = row.description
+  userInfo.expiredTime = row.expiredTime
 }
 
 const resetUserInfo = () => {
@@ -217,6 +234,7 @@ const resetUserInfo = () => {
   userInfo.email = ''
   userInfo.avatar = ''
   userInfo.description = ''
+  userInfo.expiredTime = ''
 }
 
 const shortcuts = [
@@ -313,7 +331,7 @@ async function queryAllEvent() {
     endTime = timeRange.value[1]
   }
 
-  userPageList(page.currentPage, page.pageSize).then(response => {
+  userPageList(page.currentPage, page.pageSize, search_text.value, startTime, endTime).then(response => {
     tableData.value = response.data.dataList
     page.total = response.data.totalCount
   })

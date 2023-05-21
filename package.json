@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode dev",
-    "builddev": "vue-tsc && vite build --mode dev",
-    "buildonlydev": "vite build --mode dev",
-    "buildprod": "vue-tsc && vite build --mode production",
-    "buildonlyprod": "vite build --mode production",
+    "build:dev": "vue-tsc && vite build --mode dev",
+    "build:prod": "vue-tsc && vite build --mode production",
+    "buildonly:dev": "vite build --mode dev",
+    "buildonly:prod": "vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -34,7 +34,7 @@
           <el-table-column prop="status" label="状态" width="100">
             <template #default="scope">
               <el-tag
-                  :type="scope.row.status === 1 ? 'success' : 'error'"
+                  :type="scope.row.status === 1 ? 'success' : 'danger'"
                   disable-transitions>
                 {{ scope.row.status == 1 ? '可用': scope.row.status == 2 ? '关闭' : '过期关闭' }}
               </el-tag>
@@ -94,7 +94,14 @@
         <el-input v-model="keyInfo.openaiKey" placeholder="sk-"></el-input>
       </el-form-item>
       <el-form-item label="过期时间" prop="expiredTime">
-        <el-input v-model="keyInfo.expiredTime" placeholder="过期时间"></el-input>
+        <el-date-picker
+            v-model="keyInfo.expiredTime"
+            type="date"
+            placeholder="设置过期时间"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD 00:00:00"
+            :disabled-date="disabledDate"
+        />
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="keyInfo.status" >
@@ -126,6 +133,10 @@ const search_text = ref('')
 
 const showUserDialog = ref(false)
 const createUserOp = ref(false)
+
+const disabledDate = (time: Date) => {
+  return time.getTime() < Date.now()
+}
 
 const page = reactive({
   currentPage: 1,
